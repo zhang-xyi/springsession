@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+    <!--读取redis.properties属性配置文件-->
+    <context:property-placeholder location="classpath:redis.properties"/>
+
+    <!-- 配置jedis连接工厂，用于连接redis -->
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <property name="hostName" value="${redis.hostName}"/>
+        <property name="port" value="${redis.port}"/>
+        <!--<property name="password" value="${redis.password}"/>-->
+        <property name="usePool" value="${redis.usePool}"/>
+        <property name="timeout" value="${redis.timeout}"/>
+    </bean>
+
+
+    <!-- spring注解、bean的处理器 -->
+    <context:annotation-config/>
+
+    <bean id="defaultCookieSerializer" class="org.springframework.session.web.http.DefaultCookieSerializer">
+        <property name="cookiePath" value="/"/>
+        <property name="domainName" value="myweb.com"/>
+    </bean>
+
+    <!--springSession配置信息-->
+    <bean id="redisHttpSessionConfiguration" class="org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration">
+        <property name="cookieSerializer" ref="defaultCookieSerializer"/>
+    </bean>
+
+    <!--
+        session共享问题
+            1.端口不同
+                http://localhost:8080/springsession/getsession
+                http://localhost:8081/springsession/getsession
+                解决方案：
+                    配置RedisHttpSessionConfiguration
+            2.项目名称不同
+                http://localhost:8080/myweb/getsession
+                http://localhost:8081/p2p/getsession
+                解决方案：
+                    配置RedisHttpSessionConfiguration
+                    配置DefaultCookieSerializer的path为/，并在RedisHttpSessionConfiguration的properties中引入
+            3.域名不同
+                要设置为根域名相同，二级域名相同，三级域名不同如
+                beijing.myweb.com
+                tianjian.myweb.com
+                解决方案：
+                    配置RedisHttpSessionConfiguration
+                    配置DefaultCookieSerializer的domainName为myweb.com
+    -->
+
+</beans>
